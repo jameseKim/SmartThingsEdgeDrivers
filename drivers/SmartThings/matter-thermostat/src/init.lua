@@ -44,11 +44,8 @@ local function do_configure(driver, device)
   local thermo_eps = device:get_endpoints(clusters.Thermostat.ID)
   local fan_eps = device:get_endpoints(clusters.FanControl.ID)
   local humidity_eps = device:get_endpoints(clusters.RelativeHumidityMeasurement.ID)
-  local running_state_eps = device:get_endpoints(
-    clusters.Thermostat.ID,
-    {attribute_id = clusters.Thermostat.attributes.ThermostatRunningState.ID}
-  )
   local profile_name = "thermostat"
+
   --Note: we have not encountered thermostats with multiple endpoints that support the Thermostat cluster
   if #thermo_eps == 1 then
     if #humidity_eps > 0 and #fan_eps > 0 then
@@ -68,10 +65,8 @@ local function do_configure(driver, device)
       profile_name = profile_name .. "-cooling-only"
     end
 
-    if #running_state_eps == 0 then
-      profile_name = profile_name .. "-nostate"
-    end
-
+    device:set_field("profile_name", profile_name)
+    device:send(clusters.Thermostat.attributes.AttributeList:read(device, thermo_eps[1]))
     log.info_with({hub_logs=true}, string.format("Updating device profile to %s.", profile_name))
     device:try_update_metadata({profile = profile_name})
   else
@@ -112,6 +107,18 @@ local function system_mode_handler(driver, device, ib, response)
     -- if we get here, then the reported mode was not in our mode map
     table.insert(sm, THERMOSTAT_MODE_MAP[ib.data.value].NAME)
     device:emit_event_for_endpoint(ib.endpoint_id, capabilities.thermostatMode.supportedThermostatModes(sm))
+  end
+end
+
+local function attr_list_handler(driver, device, ib, response)
+  local utils = require "st.utils"
+  for _, attr_id in ipairs (ib.data.elements or {}) do
+    if attr_id.value == clusters.Thermostat.attributes.ThermostatRunningState.ID then
+      local new_profile = device:get_field("profile_name") .. "-nostate"
+      device.log.info(string.format("Updating device profile to %s.", profile_name))
+      device:try_update_metadata({profile = new_profile})
+      return
+    end
   end
 end
 
@@ -239,6 +246,7 @@ local matter_driver_template = {
         [clusters.Thermostat.attributes.SystemMode.ID] = system_mode_handler,
         [clusters.Thermostat.attributes.ThermostatRunningState.ID] = running_state_handler,
         [clusters.Thermostat.attributes.ControlSequenceOfOperation.ID] = sequence_of_operation_handler,
+        [clusters.Thermostat.attributes.AttributeList.ID] = attr_list_handler
       },
       [clusters.FanControl.ID] = {
         [clusters.FanControl.attributes.FanModeSequence.ID] = fan_mode_sequence_handler,

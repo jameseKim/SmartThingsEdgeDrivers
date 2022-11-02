@@ -32,26 +32,9 @@ local mock_device = test.mock_device.build_test_matter_device({
         {cluster_id = clusters.FanControl.ID, cluster_type = "SERVER"},
         {
           cluster_id = clusters.Thermostat.ID,
-          attributes={
-            0,
-            18,
-            26,
-            27,
-            28,
-            65528,
-            65529,
-            65531,
-            65532,
-            65533,
-          },
-          client_commands={
-            0,
-          },
           cluster_revision=5,
           cluster_type="SERVER",
-          events={},
           feature_map=3, -- Heat and Cool features
-          server_commands={},
         },
         {cluster_id = clusters.TemperatureMeasurement.ID, cluster_type = "SERVER"},
         {cluster_id = clusters.RelativeHumidityMeasurement.ID, cluster_type = "SERVER"},

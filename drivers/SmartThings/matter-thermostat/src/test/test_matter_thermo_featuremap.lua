@@ -16,6 +16,7 @@ local test = require "integration_test"
 local capabilities = require "st.capabilities"
 local t_utils = require "integration_test.utils"
 local utils = require "st.utils"
+local Uint32 = require "st.matter.data_types".Uint32
 
 local clusters = require "st.matter.clusters"
 
@@ -32,26 +33,9 @@ local mock_device = test.mock_device.build_test_matter_device({
         {cluster_id = clusters.FanControl.ID, cluster_type = "SERVER"},
         {
           cluster_id = clusters.Thermostat.ID,
-          attributes={
-            0,
-            18,
-            26,
-            27,
-            28,
-            65528,
-            65529,
-            65531,
-            65532,
-            65533,
-          },
-          client_commands={
-            0,
-          },
           cluster_revision=5,
           cluster_type="SERVER",
-          events={},
           feature_map=1, -- Heat feature only.
-          server_commands={},
         },
         {cluster_id = clusters.TemperatureMeasurement.ID, cluster_type = "SERVER"},
         {cluster_id = clusters.RelativeHumidityMeasurement.ID, cluster_type = "SERVER"}
@@ -72,26 +56,10 @@ local mock_device_simple = test.mock_device.build_test_matter_device({
       clusters = {
         {
           cluster_id = clusters.Thermostat.ID,
-          attributes={
-            0,
-            18,
-            26,
-            27,
-            28,
-            65528,
-            65529,
-            65531,
-            65532,
-            65533,
-          },
-          client_commands={
-            0,
-          },
           cluster_revision=5,
           cluster_type="SERVER",
           events={},
           feature_map=2, -- Cool feature only.
-          server_commands={},
         },
         {cluster_id = clusters.TemperatureMeasurement.ID, cluster_type = "SERVER"},
       }
@@ -145,21 +113,57 @@ end
 test.set_test_init_function(test_init)
 
 test.register_coroutine_test(
-  "Profile change on doConfigure lifecycle event due to cluster feature map",
+  "Profile change on doConfigure lifecycle event due to cluster heating feature map",
   function()
     test.socket.device_lifecycle:__queue_receive({ mock_device.id, "doConfigure" })
-    --TODO why does provisionng state get added in the do configure event handle, but not the refres?
-    mock_device:expect_metadata_update({ profile = "thermostat-humidity-fan-heating-only-nostate" })
+    test.socket.matter:__expect_send({
+      mock_device.id,
+      clusters.Thermostat.attributes.AttributeList:read(mock_device, 1)
+    })
+    mock_device:expect_metadata_update({ profile = "thermostat-humidity-fan-heating-only" })
     mock_device:expect_metadata_update({ provisioning_state = "PROVISIONED" })
+    test.wait_for_events()
+    test.socket.matter:__queue_receive({
+      mock_device_simple.id,
+      clusters.Thermostat.attributes.AttributeList:build_test_report_data(mock_device_simple, 1, {Uint32(0x2)}),
+    })
 end
 )
 
 test.register_coroutine_test(
-  "Profile change on doConfigure lifecycle event due to cluster feature map",
+  "Profile change on doConfigure lifecycle event due to cluster cooling feature map",
   function()
     test.socket.device_lifecycle:__queue_receive({ mock_device_simple.id, "doConfigure" })
-    mock_device_simple:expect_metadata_update({ profile = "thermostat-cooling-only-nostate" })
+    test.socket.matter:__expect_send({
+      mock_device_simple.id,
+      clusters.Thermostat.attributes.AttributeList:read(mock_device_simple, 1)
+    })
+    mock_device_simple:expect_metadata_update({ profile = "thermostat-cooling-only" })
     mock_device_simple:expect_metadata_update({ provisioning_state = "PROVISIONED" })
+    test.wait_for_events()
+    test.socket.matter:__queue_receive({
+      mock_device_simple.id,
+      clusters.Thermostat.attributes.AttributeList:build_test_report_data(mock_device_simple, 1, {Uint32(0x1)}),
+    })
+end
+)
+
+test.register_coroutine_test(
+  "Profile change due to Thermostat attribute list",
+  function()
+    test.socket.device_lifecycle:__queue_receive({ mock_device_simple.id, "doConfigure" })
+    test.socket.matter:__expect_send({
+      mock_device_simple.id,
+      clusters.Thermostat.attributes.AttributeList:read(mock_device_simple, 1)
+    })
+    mock_device_simple:expect_metadata_update({ profile = "thermostat-cooling-only" })
+    mock_device_simple:expect_metadata_update({ provisioning_state = "PROVISIONED" })
+    test.wait_for_events()
+    test.socket.matter:__queue_receive({
+      mock_device_simple.id,
+      clusters.Thermostat.attributes.AttributeList:build_test_report_data(mock_device_simple, 1, {Uint32(0x29)}),
+    })
+    mock_device_simple:expect_metadata_update({ profile = "thermostat-cooling-only-nostate" })
 end
 )
 

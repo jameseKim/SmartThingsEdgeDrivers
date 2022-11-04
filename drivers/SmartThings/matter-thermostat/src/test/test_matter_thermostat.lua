@@ -13,6 +13,9 @@
 -- limitations under the License.
 
 local test = require "integration_test"
+--TODO remove this hack once "integration_test" has a mock for it
+-- This is coming in Lua libs version 046x
+function rpc_version() return 0 end
 local capabilities = require "st.capabilities"
 local t_utils = require "integration_test.utils"
 local utils = require "st.utils"

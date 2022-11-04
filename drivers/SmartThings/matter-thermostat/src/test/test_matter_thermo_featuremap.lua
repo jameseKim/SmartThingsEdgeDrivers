@@ -17,7 +17,9 @@ local capabilities = require "st.capabilities"
 local t_utils = require "integration_test.utils"
 local utils = require "st.utils"
 local Uint32 = require "st.matter.data_types".Uint32
-
+--TODO remove this hack once "integration_test" has a mock for it
+-- This is coming in Lua libs version 046x
+function rpc_version() return 0 end
 local clusters = require "st.matter.clusters"
 
 local mock_device = test.mock_device.build_test_matter_device({

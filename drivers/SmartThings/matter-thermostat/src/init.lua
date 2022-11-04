@@ -15,9 +15,18 @@
 local capabilities = require "st.capabilities"
 local log = require "log"
 local clusters = require "st.matter.clusters"
-
+local version = require "version"
 local MatterDriver = require "st.matter.driver"
 local utils = require "st.utils"
+
+local ThermostatClusterAttributeList
+if version.api < 3 then
+  ThermostatClusterAttributeList = require "AttributeList"
+  ThermostatClusterAttributeList:set_parent_cluster(clusters.Thermostat)
+else
+  ThermostatClusterAttributeList = clusters.Thermostat.attributes.AttributeList
+end
+
 
 local THERMOSTAT_MODE_MAP = {
   [clusters.Thermostat.types.ThermostatSystemMode.OFF]               = capabilities.thermostatMode.thermostatMode.off,
@@ -66,7 +75,7 @@ local function do_configure(driver, device)
     end
 
     device:set_field("profile_name", profile_name)
-    device:send(clusters.Thermostat.attributes.AttributeList:read(device, thermo_eps[1]))
+    device:send(ThermostatClusterAttributeList:read(device, thermo_eps[1]))
     log.info_with({hub_logs=true}, string.format("Updating device profile to %s.", profile_name))
     device:try_update_metadata({profile = profile_name})
   else
@@ -246,7 +255,7 @@ local matter_driver_template = {
         [clusters.Thermostat.attributes.SystemMode.ID] = system_mode_handler,
         [clusters.Thermostat.attributes.ThermostatRunningState.ID] = running_state_handler,
         [clusters.Thermostat.attributes.ControlSequenceOfOperation.ID] = sequence_of_operation_handler,
-        [clusters.Thermostat.attributes.AttributeList.ID] = attr_list_handler
+        [ThermostatClusterAttributeList.ID] = attr_list_handler
       },
       [clusters.FanControl.ID] = {
         [clusters.FanControl.attributes.FanModeSequence.ID] = fan_mode_sequence_handler,

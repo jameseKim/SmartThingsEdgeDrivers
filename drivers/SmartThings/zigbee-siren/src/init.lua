@@ -162,9 +162,9 @@ local zigbee_siren_driver_template = {
   ias_zone_configuration_method = constants.IAS_ZONE_CONFIGURE_TYPE.AUTO_ENROLL_RESPONSE,
   zigbee_handlers = {
     global = {
-			[IASWD.ID] = {
-				[zcl_global_commands.DEFAULT_RESPONSE_ID] = default_response_handler
-			}
+      [IASWD.ID] = {
+        [zcl_global_commands.DEFAULT_RESPONSE_ID] = default_response_handler
+      }
     },
     attr = {
       [IASWD.ID] = {

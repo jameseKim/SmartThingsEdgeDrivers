@@ -140,15 +140,15 @@ local function update_codes(driver, device, cmd)
 end
 
 local function time_get_handler(driver, device, cmd)
-	local time = os.date("*t")
-	device:send_to_component(
-		Time:Report({
-			hour_local_time = time.hour,
-			minute_local_time = time.min,
-			second_local_time = time.sec
-		}),
-		device:endpoint_to_component(cmd.src_channel)
-	)
+  local time = os.date("*t")
+  device:send_to_component(
+    Time:Report({
+      hour_local_time = time.hour,
+      minute_local_time = time.min,
+      second_local_time = time.sec
+    }),
+    device:endpoint_to_component(cmd.src_channel)
+  )
 end
 
 local driver_template = {
@@ -167,11 +167,11 @@ local driver_template = {
       [capabilities.lockCodes.commands.updateCodes.NAME] = update_codes
     }
   },
-	zwave_handlers = {
-		[cc.TIME] = {
-			[Time.GET] = time_get_handler -- used by DanaLock
-		}
-	},
+  zwave_handlers = {
+    [cc.TIME] = {
+      [Time.GET] = time_get_handler -- used by DanaLock
+    }
+  },
   sub_drivers = {
     require("zwave-alarm-v1-lock"),
     require("schlage-lock"),

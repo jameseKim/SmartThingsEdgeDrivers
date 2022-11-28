@@ -81,9 +81,9 @@ end
 local function device_added(driver, device)
   device:send(Groups.server.commands.RemoveAllGroups(device))
 
-  device:emit_event(capabilities.switch.switch.off())
-  device:emit_event(capabilities.energyMeter.energy({ value = 0, unit = "kWh" }))
-  device:emit_event(capabilities.powerMeter.power({ value = 0, unit = "W" }))
+  -- device:emit_event(capabilities.switch.switch.off())
+  -- device:emit_event(capabilities.energyMeter.energy({ value = 0, unit = "kWh" }))
+  -- device:emit_event(capabilities.powerMeter.power({ value = 0, unit = "W" }))
 
   -- Set private attribute
   device:send(cluster_base.write_manufacturer_specific_attribute(device,

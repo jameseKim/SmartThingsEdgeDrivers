@@ -55,8 +55,10 @@ local device_added = function(self, device)
   device:emit_event(capabilities.battery.battery(100))
 end
 
+local battery_init = battery_defaults.build_linear_voltage_init(4.0, 6.0)
+
 local device_init = function(driver, device, event)
-  battery_defaults.build_linear_voltage_init(4.0, 6.0)
+  battery_init(driver, device, event)
   lock_utils.populate_state_from_data(device)
 end
 

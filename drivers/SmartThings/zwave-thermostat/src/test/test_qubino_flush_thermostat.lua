@@ -501,7 +501,7 @@ do
           Configuration:Get({ parameter_number = 59 })
         )
       )
-
+      test.wait_for_events()
       _preferences.thermostatMode = 0
       test.socket.device_lifecycle():__queue_receive(mock_device:generate_info_changed({ preferences = _preferences }))
 
